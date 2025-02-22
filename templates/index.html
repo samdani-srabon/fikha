@@ -1,195 +1,236 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Price Tracker</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    .search-container {
-      background-color: #f8f8f8;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.5rem;
-      position: relative;
-    }
+{% extends "base.html" %}
 
+{% block title %}Price Tracker - Home{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Search Container -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-700">Product Price Tracker</h1>
+        
+        <div class="search-container max-w-4xl mx-auto">
+            <div class="relative">
+                <input type="text" 
+                    id="searchInput" 
+                    class="w-full p-6 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Search for products...">
+                <button id="searchButton" 
+                    class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
+                    Search
+                </button>
+                <ul id="suggestionsList" class="suggestions-list hidden"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Grid -->
+    <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Results will be populated here -->
+    </div>
+
+    <!-- Product Card Template -->
+    <template id="productTemplate">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="relative pb-48">
+                <img src="" alt="" class="absolute h-full w-full object-contain product-image">
+            </div>
+            <div class="p-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2 product-name"></h3>
+                <p class="text-gray-600 mb-2 product-category"></p>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-xl font-bold text-blue-700 product-price"></p>
+                    <span class="price-change"></span>
+                </div>
+                
+                <div class="space-y-2">
+                    {% if 'user_id' in session %}
+                    <button onclick="addToWishlist(this.dataset.productId)" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                        Add to Wishlist
+                    </button>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" 
+                        class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                        Login to Add to Wishlist
+                    </a>
+                    {% endif %}
+                    
+                    <a href="#" target="_blank" 
+                        class="product-link block text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">
+                        View on Website
+                    </a>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+<style>
     .suggestions-list {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background-color: #ffffff;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      z-index: 10;
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #e2e8f0;
-      padding: 0.5rem 0;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #e2e8f0;
+        padding: 0.5rem 0;
     }
 
     .suggestions-list li {
-      padding: 0.75rem 1rem;
-      cursor: pointer;
-      transition: background-color 0.2s ease-in-out;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
     }
 
     .suggestions-list li:hover {
-      background-color: #edf2f7;
+        background-color: #edf2f7;
     }
+</style>
+{% endblock %}
 
-    .product-card {
-      background-color: #fff;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      padding: 1.5rem;
-      transition: transform 0.2s ease-in-out;
-    }
+{% block scripts %}
+<script>
+const searchInput = document.getElementById('searchInput');
+const searchButton = document.getElementById('searchButton');
+const suggestionsList = document.getElementById('suggestionsList');
+const resultsContainer = document.getElementById('results');
+const productTemplate = document.getElementById('productTemplate');
 
-    .product-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .product-card h3 {
-      color: #2c5282;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      font-size: 1.25rem;
-    }
-
-    .product-card p {
-      color: #4a5568;
-      margin-bottom: 0.5rem;
-    }
-
-    .product-card .price {
-      color: #2c7a7b;
-      font-weight: bold;
-      font-size: 1.125rem;
-    }
-
-    .search-input {
-      border: 1px solid #e2e8f0;
-      padding: 0.75rem 1rem;
-      border-radius: 0.375rem;
-      width: 100%;
-      font-size: 1rem;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: #4299e1;
-      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-    }
-  </style>
-</head>
-<body class="bg-gray-100">
-  <div class="container mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-      <h1 class="text-3xl font-bold mb-6 text-center text-blue-700">Product Price Tracker</h1>
-      <div class="search-container">
-        <input type="text" class="search-input" placeholder="Search for a product..." id="searchInput">
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" id="searchButton">Search</button>
-        <ul id="suggestionsList" class="suggestions-list hidden"></ul>
-      </div>
-    </div>
-    <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-  </div>
-
-  <script>
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const suggestionsList = document.getElementById('suggestionsList');
-    const resultsContainer = document.getElementById('results');
-
-    async function fetchSuggestions(query) {
-      try {
-        const response = await fetch(`/autocomplete?q=${query}`);
+// Auto-suggest functionality
+async function fetchSuggestions(query) {
+    try {
+        const response = await fetch(`/autocomplete?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         showSuggestions(data.suggestions);
-      } catch (error) {
+    } catch (error) {
         console.error('Error fetching suggestions:', error);
-      }
     }
+}
 
-    function showSuggestions(suggestions) {
-      suggestionsList.innerHTML = '';
-      if (suggestions.length > 0) {
+function showSuggestions(suggestions) {
+    suggestionsList.innerHTML = '';
+    if (suggestions.length > 0) {
         suggestionsList.classList.remove('hidden');
         suggestions.forEach(suggestion => {
-          const li = document.createElement('li');
-          li.textContent = suggestion;
-          li.addEventListener('click', () => {
-            searchInput.value = suggestion;
-            suggestionsList.classList.add('hidden');
-            fetchSearchResults(suggestion);
-          });
-          suggestionsList.appendChild(li);
+            const li = document.createElement('li');
+            li.textContent = suggestion;
+            li.addEventListener('click', () => {
+                searchInput.value = suggestion;
+                suggestionsList.classList.add('hidden');
+                performSearch();
+            });
+            suggestionsList.appendChild(li);
         });
-      } else {
+    } else {
         suggestionsList.classList.add('hidden');
-      }
     }
+}
 
-    async function fetchSearchResults(query) {
-      try {
-        const response = await fetch(`/search?query=${query}`);
-        const data = await response.json();
-        displayResults(data.products);
-      } catch (error) {
-        console.error('Error fetching search results:', error);
-      }
-    }
+// Search functionality
+searchButton.addEventListener('click', performSearch);
+searchInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') performSearch();
+});
 
-    function displayResults(products) {
-      resultsContainer.innerHTML = '';
-      products.forEach(product => {
-        const category = product.category.split('_')[0];
-        const productCard = document.createElement('div');
-        productCard.classList.add('product-card');
-        productCard.innerHTML = `
-          <img src="${product.image_url}" alt="${product.name}" class="w-full h-48 object-contain mb-4 rounded-md">
-          <h3>${product.name}</h3>
-          <p class="text-gray-500 mb-2">${category}</p>
-          <p class="price">৳${product.current_price}</p>
-          <a href="${product.product_url}" target="_blank" class="text-blue-500 hover:text-blue-600">View on Website</a>
-        `;
-        resultsContainer.appendChild(productCard);
-      });
-    }
-
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value;
-      if (query.length > 2) {
+searchInput.addEventListener('input', () => {
+    const query = searchInput.value;
+    if (query.length > 2) {
         fetchSuggestions(query);
-      } else {
+    } else {
         suggestionsList.classList.add('hidden');
-      }
-    });
+    }
+});
 
-    searchButton.addEventListener('click', () => {
-      const query = searchInput.value;
-      fetchSearchResults(query);
-    });
-
-    searchInput.addEventListener('keyup', (event) => {
-      if (event.key === 'Enter') {
-        const query = searchInput.value;
-        fetchSearchResults(query);
-      }
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!suggestionsList.contains(event.target) && event.target !== searchInput) {
+document.addEventListener('click', (event) => {
+    if (!suggestionsList.contains(event.target) && event.target !== searchInput) {
         suggestionsList.classList.add('hidden');
-      }
+    }
+});
+
+async function performSearch() {
+    const query = searchInput.value.trim();
+    if (!query) return;
+
+    try {
+        const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        resultsContainer.innerHTML = '';
+        
+        if (data.success && data.products.length > 0) {
+            data.products.forEach(displayProduct);
+        } else {
+            resultsContainer.innerHTML = '<p class="col-span-full text-center text-gray-600">No products found</p>';
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+        resultsContainer.innerHTML = '<p class="col-span-full text-center text-red-600">Error searching products</p>';
+    }
+}
+
+function displayProduct(product) {
+    const clone = productTemplate.content.cloneNode(true);
+    
+    // Basic product information
+    clone.querySelector('.product-image').src = product.image_url || '/static/placeholder.png';
+    clone.querySelector('.product-image').alt = product.name;
+    clone.querySelector('.product-name').textContent = product.name;
+    clone.querySelector('.product-category').textContent = product.category.split('_')[0];
+    clone.querySelector('.product-price').textContent = `৳${product.current_price.toFixed(2)}`;
+    
+    // Price change display
+    const priceChange = clone.querySelector('.price-change');
+    const priceChangeClass = product.price_change > 0 
+        ? 'text-red-600' 
+        : product.price_change < 0 
+        ? 'text-green-600' 
+        : 'text-gray-600';
+    
+    const priceChangeSymbol = product.price_change > 0 
+        ? '▲' 
+        : product.price_change < 0 
+        ? '▼' 
+        : '';
+    
+    priceChange.className = `${priceChangeClass} font-medium`;
+    priceChange.textContent = `${priceChangeSymbol} ${Math.abs(product.price_change_pct || 0).toFixed(2)}%`;
+    
+    // Product site link
+    const productLink = clone.querySelector('.product-link');
+    productLink.href = product.product_url || '#';
+    
+    // Wishlist button
+    const wishlistButton = clone.querySelector('button[onclick^="addToWishlist"]');
+    if (wishlistButton) {
+        wishlistButton.dataset.productId = product.id;
+    }
+
+    resultsContainer.appendChild(clone);
+}
+
+function addToWishlist(productId) {
+    fetch(`/wishlist/add/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Product added to wishlist!');
+        } else {
+            alert('Error adding product to wishlist');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding product to wishlist');
     });
-  </script>
-</body>
-</html>
+}
+</script>
+{% endblock %}

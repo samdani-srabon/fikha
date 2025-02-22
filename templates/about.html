@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Price Tracker</title>
+    <meta name="description" content="Learn more about our mission, vision, and the team behind Price Tracker.">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <header class="bg-blue-700 text-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="/" class="text-lg font-bold">Price Tracker</a>
+            <div class="hidden md:flex space-x-6">
+                <a href="/"class="hover:text-blue-300">Home</a>
+                <a href="/about" class="hover:text-blue-300">About</a>
+                <a href="/contact" class="hover:text-blue-300">Contact</a>
+            </div>
+            <button id="menuToggle" class="block md:hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                </svg>
+            </button>
+        </nav>
+        <div id="mobileMenu" class="hidden bg-blue-600 text-white">
+            <a href="/" class="block px-4 py-2 hover:bg-blue-500">Home</a>
+            <a href="/about" class="block px-4 py-2 hover:bg-blue-500">About</a>
+            <a href="/contact.html" class="block px-4 py-2 hover:bg-blue-500">Contact</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <h1 class="text-3xl font-bold text-blue-700 mb-6 text-center">About Us</h1>
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <p class="text-lg leading-7 text-gray-700">
+                Welcome to <strong>Price Tracker</strong>, your go-to platform for tracking product prices and trends across multiple online stores.
+                Our mission is to help you make informed purchasing decisions by providing accurate, real-time price comparisons and detailed price history.
+            </p>
+            <p class="mt-4 text-lg text-gray-700">
+                We believe in transparency and convenience, and our team is dedicated to delivering the best user experience.
+                Whether you're hunting for the best deals or monitoring price drops, we've got you covered.
+            </p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-700 text-white">
+        <div class="container mx-auto px-4 py-6">
+            <p class="text-center text-sm">© 2024 Price Tracker. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
