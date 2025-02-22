@@ -1,0 +1,12 @@
+2025-02-22 18:39:23,057 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.103:5000
+2025-02-22 18:39:23,058 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-02-22 18:39:31,561 - httpx - INFO - HTTP Request: GET https://gbdeacavkkojjonbxcrn.supabase.co/rest/v1/products?select=category "HTTP/2 200 OK"
+2025-02-22 18:39:31,574 - werkzeug - INFO - 127.0.0.1 - - [22/Feb/2025 18:39:31] "GET / HTTP/1.1" 200 -
+2025-02-22 18:39:32,125 - werkzeug - INFO - 127.0.0.1 - - [22/Feb/2025 18:39:32] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-02-22 18:39:37,198 - httpx - INFO - HTTP Request: GET https://gbdeacavkkojjonbxcrn.supabase.co/rest/v1/products?select=name&name=ilike.%25goo%25&limit=10 "HTTP/2 200 OK"
+2025-02-22 18:39:37,200 - werkzeug - INFO - 127.0.0.1 - - [22/Feb/2025 18:39:37] "GET /autocomplete?q=goo HTTP/1.1" 200 -
+2025-02-22 18:39:37,213 - httpx - INFO - HTTP Request: GET https://gbdeacavkkojjonbxcrn.supabase.co/rest/v1/products?select=name&name=ilike.%25goog%25&limit=10 "HTTP/2 200 OK"
+2025-02-22 18:39:37,215 - werkzeug - INFO - 127.0.0.1 - - [22/Feb/2025 18:39:37] "GET /autocomplete?q=goog HTTP/1.1" 200 -

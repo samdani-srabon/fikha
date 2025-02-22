@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Price Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .search-container {
+      background-color: #f8f8f8;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      position: relative;
+    }
+
+    .suggestions-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: #ffffff;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      padding: 0.5rem 0;
+    }
+
+    .suggestions-list li {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .suggestions-list li:hover {
+      background-color: #edf2f7;
+    }
+
+    .product-card {
+      background-color: #fff;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 1.5rem;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-card h3 {
+      color: #2c5282;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      font-size: 1.25rem;
+    }
+
+    .product-card p {
+      color: #4a5568;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-card .price {
+      color: #2c7a7b;
+      font-weight: bold;
+      font-size: 1.125rem;
+    }
+
+    .search-input {
+      border: 1px solid #e2e8f0;
+      padding: 0.75rem 1rem;
+      border-radius: 0.375rem;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h1 class="text-3xl font-bold mb-6 text-center text-blue-700">Product Price Tracker</h1>
+      <div class="search-container">
+        <input type="text" class="search-input" placeholder="Search for a product..." id="searchInput">
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" id="searchButton">Search</button>
+        <ul id="suggestionsList" class="suggestions-list hidden"></ul>
+      </div>
+    </div>
+    <div id="results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const suggestionsList = document.getElementById('suggestionsList');
+    const resultsContainer = document.getElementById('results');
+
+    async function fetchSuggestions(query) {
+      try {
+        const response = await fetch(`/autocomplete?q=${query}`);
+        const data = await response.json();
+        showSuggestions(data.suggestions);
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+      }
+    }
+
+    function showSuggestions(suggestions) {
+      suggestionsList.innerHTML = '';
+      if (suggestions.length > 0) {
+        suggestionsList.classList.remove('hidden');
+        suggestions.forEach(suggestion => {
+          const li = document.createElement('li');
+          li.textContent = suggestion;
+          li.addEventListener('click', () => {
+            searchInput.value = suggestion;
+            suggestionsList.classList.add('hidden');
+            fetchSearchResults(suggestion);
+          });
+          suggestionsList.appendChild(li);
+        });
+      } else {
+        suggestionsList.classList.add('hidden');
+      }
+    }
+
+    async function fetchSearchResults(query) {
+      try {
+        const response = await fetch(`/search?query=${query}`);
+        const data = await response.json();
+        displayResults(data.products);
+      } catch (error) {
+        console.error('Error fetching search results:', error);
+      }
+    }
+
+    function displayResults(products) {
+      resultsContainer.innerHTML = '';
+      products.forEach(product => {
+        const category = product.category.split('_')[0];
+        const productCard = document.createElement('div');
+        productCard.classList.add('product-card');
+        productCard.innerHTML = `
+          <img src="${product.image_url}" alt="${product.name}" class="w-full h-48 object-contain mb-4 rounded-md">
+          <h3>${product.name}</h3>
+          <p class="text-gray-500 mb-2">${category}</p>
+          <p class="price">৳${product.current_price}</p>
+          <a href="${product.product_url}" target="_blank" class="text-blue-500 hover:text-blue-600">View on Website</a>
+        `;
+        resultsContainer.appendChild(productCard);
+      });
+    }
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value;
+      if (query.length > 2) {
+        fetchSuggestions(query);
+      } else {
+        suggestionsList.classList.add('hidden');
+      }
+    });
+
+    searchButton.addEventListener('click', () => {
+      const query = searchInput.value;
+      fetchSearchResults(query);
+    });
+
+    searchInput.addEventListener('keyup', (event) => {
+      if (event.key === 'Enter') {
+        const query = searchInput.value;
+        fetchSearchResults(query);
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!suggestionsList.contains(event.target) && event.target !== searchInput) {
+        suggestionsList.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

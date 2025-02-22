@@ -1,0 +1,33 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Price Tracker</title>
+    <link href="/static/css/tailwind.css" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen bg-background">
+    <div id="root">
+        {% block content %}{% endblock %}
+    </div>
+    <script src="/static/dist/bundle.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
+<!-- templates/index.html -->
+{% extends "base.html" %}
+{% block content %}
+<div id="app"></div>
+{% endblock %}
+
+<!-- static/js/main.jsx -->
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import ProductListing from '.static/js/components/ui/static/js/components/ProductListing';
+
+const container = document.getElementById('app');
+const root = createRoot(container);
+root.render(<ProductListing />);

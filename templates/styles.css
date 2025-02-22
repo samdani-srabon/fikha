@@ -1,0 +1,16 @@
+/* styles.css */
+.product-card {
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .product-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .price-change-positive {
+    color: green;
+  }
+  
+  .price-change-negative {
+    color: red;
+  }
